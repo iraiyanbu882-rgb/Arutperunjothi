@@ -38,3 +38,35 @@ class WebhookReceipt(Base):
     received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
 
     donation: Mapped[Donation] = relationship(back_populates="webhook_receipts")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    email: Mapped[str] = mapped_column(String(254), unique=True, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    password_hash: Mapped[str | None] = mapped_column(String(256))
+    google_subject: Mapped[str | None] = mapped_column(String(255), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    sessions: Mapped[list["AuthSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
+
+class AuthSession(Base):
+    __tablename__ = "auth_sessions"
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now, nullable=False)
+
+    user: Mapped[User] = relationship(back_populates="sessions")
+
+
+class OAuthState(Base):
+    __tablename__ = "oauth_states"
+
+    state_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    code_verifier: Mapped[str] = mapped_column(String(128), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

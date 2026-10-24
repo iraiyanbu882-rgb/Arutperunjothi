@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     cashfree_client_secret: str = ""
     cashfree_env: str = "sandbox"
     cashfree_api_version: str = "2026-01-01"
+    google_client_id: str = ""
+    google_client_secret: str = ""
     donations_enabled: bool = False
     enable_live_donations: bool = False
     live_donation_compliance_confirmed: bool = False
@@ -36,6 +38,20 @@ class Settings(BaseSettings):
     @property
     def payment_mode(self) -> str:
         return self.cashfree_env
+
+    @property
+    def google_sign_in_enabled(self) -> bool:
+        return bool(self.google_client_id.strip() and self.google_client_secret.strip())
+
+    @property
+    def auth_cookie_secure(self) -> bool:
+        return self.public_base_url.startswith("https://")
+
+    @property
+    def auth_cookie_samesite(self) -> str:
+        if self.auth_cookie_secure and self.frontend_url.startswith("https://"):
+            return "none"
+        return "lax"
 
     @property
     def cashfree_ready(self) -> bool:

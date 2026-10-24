@@ -46,5 +46,41 @@ class DonationStatusResponse(BaseModel):
 class PublicConfigResponse(BaseModel):
     donations_enabled: bool
     payment_mode: str
+    google_sign_in_enabled: bool
 
     model_config = ConfigDict(extra="forbid")
+
+
+class SignUpRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    email: EmailStr
+    password: str = Field(min_length=12, max_length=128)
+
+    @field_validator("name")
+    @classmethod
+    def clean_name(cls, value: str) -> str:
+        cleaned = " ".join(value.split())
+        if not cleaned or any(ord(character) < 32 for character in cleaned):
+            raise ValueError("Enter a valid name")
+        return cleaned
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).lower()
+
+
+class SignInRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        return str(value).lower()
+
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    email: EmailStr

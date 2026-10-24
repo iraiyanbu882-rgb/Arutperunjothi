@@ -97,6 +97,24 @@ const copy = {
     language: "தமிழ்",
     languageLabel: "Language",
     menu: "Open menu",
+    signIn: "Sign in",
+    signUp: "Create account",
+    signOut: "Sign out",
+    signedInAs: "Signed in as",
+    createAccount: "Create your account",
+    welcomeBack: "Welcome back",
+    fullName: "Full name",
+    password: "Password",
+    passwordHelp: "Use at least 12 characters.",
+    continueWithGoogle: "Continue with Google",
+    orEmail: "or use email",
+    haveAccount: "Already have an account?",
+    needAccount: "New here?",
+    googleNeedsSetup: "Google sign-in is not configured yet. Add the Google OAuth client ID and secret to the backend environment.",
+    authError: "We could not complete Google sign-in. Please try again.",
+    authSuccess: "You are signed in with Google.",
+    accountCreated: "Your account has been created.",
+    emailSignedIn: "You are signed in.",
   },
   ta: {
     nav: ["எங்களைப் பற்றி", "சேவைகள்", "சாதனைகள்", "புகைப்படங்கள்", "தொடர்பு"],
@@ -166,6 +184,24 @@ const copy = {
     language: "English",
     languageLabel: "மொழி",
     menu: "பட்டியலைத் திற",
+    signIn: "உள்நுழை",
+    signUp: "கணக்கு உருவாக்கு",
+    signOut: "வெளியேறு",
+    signedInAs: "உள்நுழைந்துள்ளீர்கள்:",
+    createAccount: "உங்கள் கணக்கை உருவாக்குங்கள்",
+    welcomeBack: "மீண்டும் வருக",
+    fullName: "முழுப் பெயர்",
+    password: "கடவுச்சொல்",
+    passwordHelp: "குறைந்தது 12 எழுத்துகள் பயன்படுத்தவும்.",
+    continueWithGoogle: "Google மூலம் தொடரவும்",
+    orEmail: "அல்லது மின்னஞ்சல் பயன்படுத்தவும்",
+    haveAccount: "ஏற்கனவே கணக்கு உள்ளதா?",
+    needAccount: "புதியவரா?",
+    googleNeedsSetup: "Google உள்நுழைவு இன்னும் அமைக்கப்படவில்லை. பின்தளத்தில் Google OAuth client ID மற்றும் secret சேர்க்கவும்.",
+    authError: "Google உள்நுழைவை முடிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+    authSuccess: "Google மூலம் உள்நுழைந்துள்ளீர்கள்.",
+    accountCreated: "உங்கள் கணக்கு உருவாக்கப்பட்டது.",
+    emailSignedIn: "நீங்கள் உள்நுழைந்துள்ளீர்கள்.",
   },
 };
 
@@ -199,7 +235,18 @@ function LotusLamp() {
 function App() {
   const [language, setLanguage] = useState("en");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [config, setConfig] = useState({ donations_enabled: false, payment_mode: "sandbox" });
+  const [config, setConfig] = useState({
+    donations_enabled: false,
+    payment_mode: "sandbox",
+    google_sign_in_enabled: false,
+  });
+  const [authUser, setAuthUser] = useState(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState("signin");
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [authNotice, setAuthNotice] = useState("");
+  const [authForm, setAuthForm] = useState({ name: "", email: "", password: "" });
   const [amount, setAmount] = useState("250");
   const [customAmount, setCustomAmount] = useState("");
   const [donor, setDonor] = useState({ name: "", email: "", phone: "" });
@@ -221,8 +268,37 @@ function App() {
         return response.json();
       })
       .then(setConfig)
-      .catch(() => setConfig({ donations_enabled: false, payment_mode: "sandbox" }));
-  }, []);
+      .catch(() => setConfig({
+        donations_enabled: false,
+        payment_mode: "sandbox",
+        google_sign_in_enabled: false,
+      }));
+    fetch(`${API_BASE}/api/auth/me`, { credentials: "include" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((user) => setAuthUser(user))
+      .catch(() => setAuthUser(null));
+
+    const authResult = new URLSearchParams(window.location.search).get("auth");
+    if (authResult === "google_success") setAuthNotice(text.authSuccess);
+    if (authResult === "google_error") {
+      setAuthError(text.authError);
+      setAuthOpen(true);
+    }
+    if (authResult) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("auth");
+      window.history.replaceState({}, "", url);
+    }
+  }, [text.authError, text.authSuccess]);
+
+  useEffect(() => {
+    if (!authOpen) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setAuthOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [authOpen]);
 
   useEffect(() => {
     if (!orderId) return undefined;
@@ -270,6 +346,58 @@ function App() {
     ["#gallery", text.nav[3]],
     ["#contact", text.nav[4]],
   ];
+
+  function openAuth(mode = "signin") {
+    setAuthMode(mode);
+    setAuthError("");
+    setAuthNotice("");
+    setAuthOpen(true);
+    setMenuOpen(false);
+  }
+
+  async function submitAuth(event) {
+    event.preventDefault();
+    setAuthBusy(true);
+    setAuthError("");
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/${authMode}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(authForm),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "Unable to sign in.");
+      setAuthUser(data);
+      setAuthOpen(false);
+      setAuthForm({ name: "", email: "", password: "" });
+      setAuthNotice(authMode === "signup" ? text.accountCreated : text.emailSignedIn);
+    } catch (error) {
+      setAuthError(error.message);
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  async function signOut() {
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/signout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Unable to sign out.");
+      setAuthUser(null);
+      setAuthNotice("");
+      setMenuOpen(false);
+    } catch (error) {
+      setAuthNotice(error.message);
+    }
+  }
+
+  function startGoogleSignIn() {
+    if (!config.google_sign_in_enabled) return;
+    window.location.assign(`${API_BASE}/api/auth/google/start`);
+  }
 
   async function submitDonation(event) {
     event.preventDefault();
@@ -329,6 +457,17 @@ function App() {
             <a href={href} key={href} onClick={() => setMenuOpen(false)}>{label}</a>
           ))}
           <a className="nav-donate" href="#donate" onClick={() => setMenuOpen(false)}>{text.donate}</a>
+          {authUser ? (
+            <div className="nav-account">
+              <span className="account-name" title={authUser.email}>{authUser.name}</span>
+              <button className="nav-auth-button" type="button" onClick={signOut}>{text.signOut}</button>
+            </div>
+          ) : (
+            <div className="nav-auth-group">
+              <button className="nav-auth-button" type="button" onClick={() => openAuth("signin")}>{text.signIn}</button>
+              <button className="nav-auth-button nav-auth-secondary" type="button" onClick={() => openAuth("signup")}>{text.signUp}</button>
+            </div>
+          )}
           <div className="language-switcher" role="group" aria-label={text.languageLabel}>
             <button
               className={language === "en" ? "language-choice active" : "language-choice"}
@@ -350,6 +489,81 @@ function App() {
           </div>
         </nav>
       </header>
+
+      {authNotice && <p className="auth-notice" role="status">{authNotice}</p>}
+      {authOpen && (
+        <div className="auth-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setAuthOpen(false);
+        }}>
+          <section className="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+            <button className="auth-close" type="button" aria-label="Close sign in" onClick={() => setAuthOpen(false)}>×</button>
+            <div className="section-kicker"><span>✺</span><span>Arutperunjothi Trust</span></div>
+            <h2 id="auth-title">{authMode === "signup" ? text.createAccount : text.welcomeBack}</h2>
+            <button
+              className="google-auth-button"
+              type="button"
+              onClick={startGoogleSignIn}
+              disabled={!config.google_sign_in_enabled || authBusy}
+              title={!config.google_sign_in_enabled ? text.googleNeedsSetup : undefined}
+            >
+              <span className="google-g" aria-hidden="true">G</span>
+              {text.continueWithGoogle}
+            </button>
+            {!config.google_sign_in_enabled && <p className="google-setup-note">{text.googleNeedsSetup}</p>}
+            <div className="auth-divider"><span>{text.orEmail}</span></div>
+            <form className="auth-form" onSubmit={submitAuth}>
+              {authMode === "signup" && (
+                <label className="field-label">{text.fullName}
+                  <input
+                    required
+                    autoFocus
+                    autoComplete="name"
+                    maxLength="100"
+                    value={authForm.name}
+                    onChange={(event) => setAuthForm({ ...authForm, name: event.target.value })}
+                  />
+                </label>
+              )}
+              <label className="field-label">{text.email}
+                <input
+                  required
+                  autoFocus={authMode === "signin"}
+                  type="email"
+                  autoComplete="email"
+                  maxLength="254"
+                  value={authForm.email}
+                  onChange={(event) => setAuthForm({ ...authForm, email: event.target.value })}
+                />
+              </label>
+              <label className="field-label">{text.password}
+                <input
+                  required
+                  type="password"
+                  autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+                  minLength={authMode === "signup" ? 12 : 1}
+                  maxLength="128"
+                  value={authForm.password}
+                  onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })}
+                />
+              </label>
+              {authMode === "signup" && <p className="password-help">{text.passwordHelp}</p>}
+              {authError && <p className="auth-error" role="alert">{authError}</p>}
+              <button className="button button-brown auth-submit" type="submit" disabled={authBusy}>
+                {authBusy ? "…" : authMode === "signup" ? text.signUp : text.signIn}
+              </button>
+            </form>
+            <p className="auth-mode-switch">
+              {authMode === "signup" ? text.haveAccount : text.needAccount}{" "}
+              <button type="button" onClick={() => {
+                setAuthMode(authMode === "signup" ? "signin" : "signup");
+                setAuthError("");
+              }}>
+                {authMode === "signup" ? text.signIn : text.signUp}
+              </button>
+            </p>
+          </section>
+        </div>
+      )}
 
       <main>
         <section className="hero" id="home">

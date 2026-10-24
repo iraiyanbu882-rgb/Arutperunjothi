@@ -2,28 +2,48 @@ import base64
 import hashlib
 import hmac
 import json
+import secrets
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlencode
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+import httpx
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import cashfree
+from app.auth import (
+    create_pkce_pair,
+    create_session_token,
+    hash_oauth_state,
+    hash_password,
+    hash_session_token,
+    verify_password,
+)
 from app.cashfree import CashfreeError
 from app.config import Settings, get_settings
 from app.database import Base, SessionLocal, engine
-from app.models import Donation, WebhookReceipt, utc_now
+from app.models import AuthSession, Donation, OAuthState, User, WebhookReceipt, utc_now
 from app.schemas import (
     DonationOrderRequest,
     DonationOrderResponse,
     DonationStatusResponse,
     PublicConfigResponse,
+    SignInRequest,
+    SignUpRequest,
+    UserResponse,
 )
 
+AUTH_COOKIE = "arut_session"
+GOOGLE_STATE_COOKIE = "arut_google_state"
+AUTH_SESSION_DAYS = 30
+GOOGLE_STATE_MINUTES = 10
+_DUMMY_PASSWORD_HASH = hash_password("not-a-real-user-password")
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -36,7 +56,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=get_settings().cors_origin_list,
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Idempotency-Key"],
 )
@@ -48,6 +68,60 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def require_trusted_origin(request: Request, settings: Settings) -> None:
+    if request.headers.get("origin") not in settings.cors_origin_list:
+        raise HTTPException(status_code=403, detail="Request origin is not allowed.")
+
+
+def require_donations_enabled(settings: Settings) -> None:
+    if not settings.can_accept_donations:
+        raise HTTPException(status_code=503, detail="Donations are not enabled.")
+
+
+def set_auth_cookie(response: Response, token: str, settings: Settings) -> None:
+    response.set_cookie(
+        AUTH_COOKIE,
+        token,
+        max_age=AUTH_SESSION_DAYS * 24 * 60 * 60,
+        httponly=True,
+        secure=settings.auth_cookie_secure,
+        samesite=settings.auth_cookie_samesite,
+        path="/",
+    )
+
+
+def create_auth_session(db: Session, user: User) -> str:
+    now = utc_now()
+    db.query(AuthSession).filter(AuthSession.expires_at < now).delete()
+    token = create_session_token()
+    db.add(
+        AuthSession(
+            token_hash=hash_session_token(token),
+            user_id=user.id,
+            expires_at=now + timedelta(days=AUTH_SESSION_DAYS),
+        )
+    )
+    db.commit()
+    return token
+
+
+def user_response(user: User) -> UserResponse:
+    return UserResponse(id=user.id, name=user.name, email=user.email)
+
+
+def _frontend_auth_redirect(status: str) -> RedirectResponse:
+    return RedirectResponse(
+        f"{get_settings().frontend_url.rstrip('/')}/?auth={status}",
+        status_code=303,
+    )
+
+
+def _valid_expiry(expires_at: datetime, now: datetime) -> bool:
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    return expires_at > now
 
 
 def _donation_response(donation: Donation, payment_mode: str) -> DonationOrderResponse:
@@ -97,7 +171,238 @@ def public_config(settings: Settings = Depends(get_settings)):
     return PublicConfigResponse(
         donations_enabled=settings.can_accept_donations,
         payment_mode=settings.payment_mode,
+        google_sign_in_enabled=settings.google_sign_in_enabled,
     )
+
+
+@app.get("/api/auth/me", response_model=UserResponse)
+def auth_me(
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    token = request.cookies.get(AUTH_COOKIE)
+    if not token:
+        raise HTTPException(status_code=401, detail="Not signed in.")
+    session = db.get(AuthSession, hash_session_token(token))
+    if not session or not _valid_expiry(session.expires_at, utc_now()):
+        raise HTTPException(status_code=401, detail="Not signed in.")
+    user = db.get(User, session.user_id)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not signed in.")
+    return user_response(user)
+
+
+@app.post("/api/auth/signup", response_model=UserResponse, status_code=201)
+def auth_signup(
+    payload: SignUpRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    require_trusted_origin(request, settings)
+    user = User(
+        id=str(uuid.uuid4()),
+        name=payload.name,
+        email=str(payload.email),
+        password_hash=hash_password(payload.password),
+    )
+    db.add(user)
+    try:
+        db.flush()
+        token = create_auth_session(db, user)
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="An account with this email already exists.") from error
+    set_auth_cookie(response, token, settings)
+    return user_response(user)
+
+
+@app.post("/api/auth/signin", response_model=UserResponse)
+def auth_signin(
+    payload: SignInRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    require_trusted_origin(request, settings)
+    user = db.scalar(select(User).where(User.email == str(payload.email)))
+    password_hash = user.password_hash if user and user.password_hash else _DUMMY_PASSWORD_HASH
+    if not verify_password(payload.password, password_hash) or not user:
+        raise HTTPException(status_code=401, detail="Email or password is incorrect.")
+    token = create_auth_session(db, user)
+    set_auth_cookie(response, token, settings)
+    return user_response(user)
+
+
+@app.post("/api/auth/signout", status_code=204)
+def auth_signout(
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    require_trusted_origin(request, settings)
+    token = request.cookies.get(AUTH_COOKIE)
+    if token:
+        session = db.get(AuthSession, hash_session_token(token))
+        if session:
+            db.delete(session)
+            db.commit()
+    response.delete_cookie(AUTH_COOKIE, path="/", httponly=True, secure=settings.auth_cookie_secure, samesite="lax")
+
+
+@app.get("/api/auth/google/start")
+def google_auth_start(
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    if not settings.google_sign_in_enabled:
+        raise HTTPException(status_code=503, detail="Google sign-in is not configured.")
+
+    state = secrets.token_urlsafe(32)
+    verifier, challenge = create_pkce_pair()
+    db.query(OAuthState).filter(OAuthState.expires_at < utc_now()).delete()
+    db.add(
+        OAuthState(
+            state_hash=hash_oauth_state(state),
+            code_verifier=verifier,
+            expires_at=utc_now() + timedelta(minutes=GOOGLE_STATE_MINUTES),
+        )
+    )
+    db.commit()
+    callback_url = f"{settings.public_base_url.rstrip('/')}/api/auth/google/callback"
+    query = urlencode(
+        {
+            "client_id": settings.google_client_id,
+            "redirect_uri": callback_url,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "state": state,
+            "code_challenge": challenge,
+            "code_challenge_method": "S256",
+            "access_type": "online",
+        }
+    )
+    redirect = RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{query}", status_code=302)
+    redirect.set_cookie(
+        GOOGLE_STATE_COOKIE,
+        state,
+        max_age=GOOGLE_STATE_MINUTES * 60,
+        httponly=True,
+        secure=settings.auth_cookie_secure,
+        samesite=settings.auth_cookie_samesite,
+        path="/api/auth/google",
+    )
+    return redirect
+
+
+@app.get("/api/auth/google/callback")
+async def google_auth_callback(
+    request: Request,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    state = request.query_params.get("state", "")
+    state_cookie = request.cookies.get(GOOGLE_STATE_COOKIE, "")
+    if not state or not state_cookie or not hmac.compare_digest(state, state_cookie):
+        return _frontend_auth_redirect("google_error")
+    state_record = db.get(OAuthState, hash_oauth_state(state))
+    if not state_record or not _valid_expiry(state_record.expires_at, utc_now()):
+        return _frontend_auth_redirect("google_error")
+    code_verifier = state_record.code_verifier
+    db.delete(state_record)
+    db.commit()
+    if request.query_params.get("error") or not request.query_params.get("code"):
+        return _frontend_auth_redirect("google_error")
+
+    callback_url = f"{settings.public_base_url.rstrip('/')}/api/auth/google/callback"
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            token_response = await client.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code": request.query_params["code"],
+                    "client_id": settings.google_client_id,
+                    "client_secret": settings.google_client_secret,
+                    "redirect_uri": callback_url,
+                    "grant_type": "authorization_code",
+                    "code_verifier": code_verifier,
+                },
+            )
+            if not token_response.is_success:
+                return _frontend_auth_redirect("google_error")
+            token_data = token_response.json()
+            if not isinstance(token_data, dict):
+                return _frontend_auth_redirect("google_error")
+            access_token = token_data.get("access_token")
+            if not isinstance(access_token, str) or not access_token:
+                return _frontend_auth_redirect("google_error")
+            profile_response = await client.get(
+                "https://openidconnect.googleapis.com/v1/userinfo",
+                headers={"Authorization": f"Bearer {access_token}"},
+            )
+            if not profile_response.is_success:
+                return _frontend_auth_redirect("google_error")
+            profile = profile_response.json()
+    except (httpx.RequestError, ValueError):
+        return _frontend_auth_redirect("google_error")
+    if not isinstance(profile, dict):
+        return _frontend_auth_redirect("google_error")
+
+    subject = profile.get("sub")
+    email = profile.get("email")
+    name = profile.get("name")
+    if (
+        not isinstance(subject, str)
+        or not subject
+        or not isinstance(email, str)
+        or not isinstance(name, str)
+        or profile.get("email_verified") is not True
+    ):
+        return _frontend_auth_redirect("google_error")
+
+    email = email.strip().lower()
+    user = db.scalar(select(User).where(User.google_subject == subject))
+    if not user:
+        user = db.scalar(select(User).where(User.email == email))
+        if user:
+            if user.google_subject and user.google_subject != subject:
+                return _frontend_auth_redirect("google_error")
+            user.google_subject = subject
+        else:
+            user = User(
+                id=str(uuid.uuid4()),
+                name=" ".join(name.split())[:100] or email,
+                email=email,
+                google_subject=subject,
+            )
+            db.add(user)
+            try:
+                db.flush()
+            except IntegrityError:
+                db.rollback()
+                return _frontend_auth_redirect("google_error")
+    token = create_auth_session(db, user)
+    redirect = _frontend_auth_redirect("google_success")
+    redirect.set_cookie(
+        AUTH_COOKIE,
+        token,
+        max_age=AUTH_SESSION_DAYS * 24 * 60 * 60,
+        httponly=True,
+        secure=settings.auth_cookie_secure,
+        samesite=settings.auth_cookie_samesite,
+        path="/",
+    )
+    redirect.delete_cookie(
+        GOOGLE_STATE_COOKIE,
+        path="/api/auth/google",
+        httponly=True,
+        secure=settings.auth_cookie_secure,
+        samesite=settings.auth_cookie_samesite,
+    )
+    return redirect
 
 
 @app.post("/api/donations/orders", response_model=DonationOrderResponse)
@@ -111,8 +416,7 @@ async def create_donation_order(
         uuid.UUID(idempotency_key)
     except ValueError as error:
         raise HTTPException(status_code=400, detail="Idempotency-Key must be a UUID.") from error
-    if not settings.can_accept_donations:
-        raise HTTPException(status_code=503, detail="Donations are not enabled.")
+    require_donations_enabled(settings)
 
     donation = db.scalar(select(Donation).where(Donation.idempotency_key == idempotency_key))
     if donation:

@@ -8,7 +8,7 @@ A responsive, bilingual (English/Tamil) charity website built with React and Vit
 
 - `frontend/` — React, Vite, responsive site and Cashfree checkout client.
 - `backend/` — FastAPI, SQLAlchemy/SQLite, Cashfree order and verification endpoints.
-- `backend/tests/` — basic signature, amount/order verification, validation, and live-mode gate tests.
+- `backend/tests/` — payment verification, auth/session, input validation, and live-mode gate tests.
 
 ## Requirements
 
@@ -47,6 +47,19 @@ A responsive, bilingual (English/Tamil) charity website built with React and Vit
    Open the Vite URL, usually `http://localhost:5173`. The frontend defaults to `http://localhost:8000` for the API. Set `VITE_API_BASE_URL` at build time if the API is hosted elsewhere.
 
 4. After adding sandbox credentials, enable checkout only in a private sandbox environment by setting `DONATIONS_ENABLED=true` in `backend/.env` and restarting FastAPI. Sandbox checkout is selected automatically when `CASHFREE_ENV=sandbox`. Do not use live mode until all launch prerequisites below are verified.
+
+## Member accounts and Google sign-in
+
+Email/password accounts are stored in SQLite. Passwords use scrypt hashes; the browser receives only a random, HttpOnly session cookie. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `backend/.env` to enable the Google button. Without those values, Google sign-in remains visibly disabled while email/password sign-in and sign-up continue to work. New account and sign-in data is not connected to Cashfree donations yet.
+
+To configure Google OAuth:
+
+1. Create an OAuth 2.0 **Web application** client in Google Cloud Console.
+2. Add `http://localhost:8000/api/auth/google/callback` as an authorised redirect URI for local development. For deployment, use `https://<api-host>/api/auth/google/callback`.
+3. Put its client ID and client secret in the backend environment only. Do not add the client secret to Vite variables or frontend source.
+4. Ensure `FRONTEND_URL`, `PUBLIC_BASE_URL`, and `CORS_ORIGINS` match the browser and API origins. In production, serve both over HTTPS.
+
+The server uses OAuth authorization code flow with PKCE and one-time state validation, verifies the Google account using Google's user-info endpoint, and sets the same HttpOnly session cookie used for password accounts. The frontend never receives OAuth tokens. Authentication POST requests require a configured trusted Origin. Add rate limiting at the reverse proxy before public deployment and publish the trust-approved privacy policy covering member data.
 
 ## Cashfree configuration
 
