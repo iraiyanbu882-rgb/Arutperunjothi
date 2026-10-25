@@ -47,6 +47,7 @@ class PublicConfigResponse(BaseModel):
     donations_enabled: bool
     payment_mode: str
     google_sign_in_enabled: bool
+    google_redirect_uri: str
 
     model_config = ConfigDict(extra="forbid")
 

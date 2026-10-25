@@ -44,6 +44,10 @@ class Settings(BaseSettings):
         return bool(self.google_client_id.strip() and self.google_client_secret.strip())
 
     @property
+    def google_redirect_uri(self) -> str:
+        return f"{self.public_base_url.rstrip('/')}/api/auth/google/callback"
+
+    @property
     def auth_cookie_secure(self) -> bool:
         return self.public_base_url.startswith("https://")
 

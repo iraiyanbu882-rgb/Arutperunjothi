@@ -19,6 +19,7 @@ from app.main import (
     auth_signout,
     auth_signup,
     google_auth_start,
+    public_config,
     require_donations_enabled,
     require_trusted_origin,
     verify_webhook_signature,
@@ -252,6 +253,14 @@ def test_google_signin_start_uses_state_and_pkce(auth_db):
         assert values["scope"] == ["openid email profile"]
         assert values["state"][0]
         assert "httponly" in redirect.headers["set-cookie"].lower()
+
+
+def test_google_callback_url_is_exposed_for_console_configuration(auth_db):
+    _, settings = auth_db
+
+    config = public_config(settings)
+
+    assert config.google_redirect_uri == "http://localhost:8000/api/auth/google/callback"
 
 
 def test_auth_mutations_reject_untrusted_origin(auth_db):

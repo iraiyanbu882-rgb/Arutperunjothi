@@ -172,6 +172,7 @@ def public_config(settings: Settings = Depends(get_settings)):
         donations_enabled=settings.can_accept_donations,
         payment_mode=settings.payment_mode,
         google_sign_in_enabled=settings.google_sign_in_enabled,
+        google_redirect_uri=settings.google_redirect_uri,
     )
 
 
@@ -272,7 +273,7 @@ def google_auth_start(
         )
     )
     db.commit()
-    callback_url = f"{settings.public_base_url.rstrip('/')}/api/auth/google/callback"
+    callback_url = settings.google_redirect_uri
     query = urlencode(
         {
             "client_id": settings.google_client_id,
@@ -317,7 +318,7 @@ async def google_auth_callback(
     if request.query_params.get("error") or not request.query_params.get("code"):
         return _frontend_auth_redirect("google_error")
 
-    callback_url = f"{settings.public_base_url.rstrip('/')}/api/auth/google/callback"
+    callback_url = settings.google_redirect_uri
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             token_response = await client.post(

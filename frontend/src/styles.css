@@ -252,6 +252,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .google-auth-button:disabled { cursor: not-allowed; opacity: .55; }
 .google-g { color: #4285f4; font: 700 1.25rem Arial, sans-serif; }
 .google-setup-note { margin: 9px 0 0; color: var(--muted); font-size: .73rem; line-height: 1.55; }
+.google-redirect-hint { margin: 12px 0 0; color: var(--muted); font-size: .73rem; line-height: 1.55; }
+.google-redirect-hint code { display: block; overflow-wrap: anywhere; margin-top: 5px; padding: 7px 9px; background: #f3eee2; color: var(--brown); font-size: .72rem; user-select: all; }
 .auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 15px; color: var(--muted); font-size: .75rem; }
 .auth-divider::before, .auth-divider::after { flex: 1; height: 1px; background: var(--line); content: ""; }
 .auth-form { display: grid; gap: 13px; }

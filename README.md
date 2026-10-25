@@ -55,7 +55,7 @@ Email/password accounts are stored in SQLite. Passwords use scrypt hashes; the b
 To configure Google OAuth:
 
 1. Create an OAuth 2.0 **Web application** client in Google Cloud Console.
-2. Add `http://localhost:8000/api/auth/google/callback` as an authorised redirect URI for local development. For deployment, use `https://<api-host>/api/auth/google/callback`.
+2. Add the exact URI shown in the sign-in dialog as an authorised redirect URI. Locally it is `http://localhost:8000/api/auth/google/callback`; for deployment, it is `https://<api-host>/api/auth/google/callback`. Enter it under **Authorized redirect URIs**, not only **Authorized JavaScript origins**.
 3. Put its client ID and client secret in the backend environment only. Do not add the client secret to Vite variables or frontend source.
 4. Ensure `FRONTEND_URL`, `PUBLIC_BASE_URL`, and `CORS_ORIGINS` match the browser and API origins. In production, serve both over HTTPS.
 

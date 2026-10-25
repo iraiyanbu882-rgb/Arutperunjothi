@@ -35,9 +35,9 @@ const copy = {
     eyebrow: "A light of compassion",
     title: "A little kindness can bring warmth to someone's whole day.",
     intro:
-      "Arutperunjothi Trust is presented here as a trust in Tamil Nadu, India. Its registration details and current programmes should be verified before publication.",
+      "Arutperunjothi Trust is presented here as a trust in Pondicherry, India. Its registration details and current programmes should be verified before publication.",
     explore: "Explore our work",
-    note: "Trust registration, contact details, and impact figures are awaiting independent verification before public use.",
+
     aboutLabel: "Who we are",
     aboutTitle: "Service, offered with an open heart.",
     aboutText:
@@ -111,6 +111,7 @@ const copy = {
     haveAccount: "Already have an account?",
     needAccount: "New here?",
     googleNeedsSetup: "Google sign-in is not configured yet. Add the Google OAuth client ID and secret to the backend environment.",
+
     authError: "We could not complete Google sign-in. Please try again.",
     authSuccess: "You are signed in with Google.",
     accountCreated: "Your account has been created.",
@@ -198,6 +199,7 @@ const copy = {
     haveAccount: "ஏற்கனவே கணக்கு உள்ளதா?",
     needAccount: "புதியவரா?",
     googleNeedsSetup: "Google உள்நுழைவு இன்னும் அமைக்கப்படவில்லை. பின்தளத்தில் Google OAuth client ID மற்றும் secret சேர்க்கவும்.",
+    googleRedirectHint: "Google Cloud Console-இல் Authorized redirect URIs பகுதியில் இந்த URL-ஐ அப்படியே சேர்க்கவும்:",
     authError: "Google உள்நுழைவை முடிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
     authSuccess: "Google மூலம் உள்நுழைந்துள்ளீர்கள்.",
     accountCreated: "உங்கள் கணக்கு உருவாக்கப்பட்டது.",
@@ -239,6 +241,7 @@ function App() {
     donations_enabled: false,
     payment_mode: "sandbox",
     google_sign_in_enabled: false,
+    google_redirect_uri: "http://localhost:8000/api/auth/google/callback",
   });
   const [authUser, setAuthUser] = useState(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -272,6 +275,7 @@ function App() {
         donations_enabled: false,
         payment_mode: "sandbox",
         google_sign_in_enabled: false,
+        google_redirect_uri: "http://localhost:8000/api/auth/google/callback",
       }));
     fetch(`${API_BASE}/api/auth/me`, { credentials: "include" })
       .then((response) => response.ok ? response.json() : null)
@@ -439,7 +443,7 @@ function App() {
         <a className="brand" href="#home" aria-label="Arutperunjothi Trust home">
           <span className="brand-seal" aria-hidden="true">அ</span>
           <span>
-            <strong>Arutperunjothi Trust</strong>
+            <strong>Arutperunjothi Trust -Bahour</strong>
             <small lang="ta">அருட்பெருஞ்ஜோதி அறக்கட்டளை</small>
           </span>
         </a>
@@ -510,6 +514,10 @@ function App() {
               {text.continueWithGoogle}
             </button>
             {!config.google_sign_in_enabled && <p className="google-setup-note">{text.googleNeedsSetup}</p>}
+            <p className="google-redirect-hint">
+              {text.googleRedirectHint}
+              <code>{config.google_redirect_uri}</code>
+            </p>
             <div className="auth-divider"><span>{text.orEmail}</span></div>
             <form className="auth-form" onSubmit={submitAuth}>
               {authMode === "signup" && (
