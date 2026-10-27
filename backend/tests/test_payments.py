@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+from datetime import date
 from http.cookies import SimpleCookie
 from urllib.parse import parse_qs, urlparse
 
@@ -22,10 +23,18 @@ from app.main import (
     public_config,
     require_donations_enabled,
     require_trusted_origin,
+    submit_membership_application,
+    submit_volunteer_application,
     verify_webhook_signature,
 )
-from app.models import Donation, User
-from app.schemas import DonationOrderRequest, SignInRequest, SignUpRequest
+from app.models import Donation, MembershipApplication, User, VolunteerApplication
+from app.schemas import (
+    DonationOrderRequest,
+    MembershipApplicationRequest,
+    SignInRequest,
+    SignUpRequest,
+    VolunteerApplicationRequest,
+)
 from pydantic import ValidationError
 
 
@@ -114,19 +123,157 @@ def test_order_confirmation_requires_matching_paid_inr_amount():
 
 
 def test_donation_request_rejects_invalid_amount_and_phone():
-    try:
+    with pytest.raises(ValidationError):
         DonationOrderRequest(amount=99, name="Donor", email="donor@example.com", phone="9876543210")
-    except ValidationError:
-        pass
-    else:
-        raise AssertionError("amount below minimum should be rejected")
-
-    try:
+    with pytest.raises(ValidationError):
         DonationOrderRequest(amount=250, name="Donor", email="donor@example.com", phone="1234567890")
-    except ValidationError:
-        pass
-    else:
-        raise AssertionError("invalid Indian phone should be rejected")
+
+
+def test_volunteer_application_is_validated_and_saved_privately(auth_db):
+    session_factory, settings = auth_db
+    with session_factory() as db:
+        payload = VolunteerApplicationRequest(
+            name="  Test   Volunteer ",
+            age=25,
+            address="  12 Garden Road, Bahour  ",
+            role_on_trust="  Meal service  ",
+            available_date=date(2026, 11, 5),
+        )
+
+        result = submit_volunteer_application(
+            payload,
+            make_request(origin="http://localhost:5173"),
+            db,
+            settings,
+        )
+
+        application = db.scalar(select(VolunteerApplication))
+        assert result == {"message": "Volunteer application submitted."}
+        assert application is not None
+        assert application.name == "Test Volunteer"
+        assert application.age == 25
+        assert application.address == "12 Garden Road, Bahour"
+        assert application.role_on_trust == "Meal service"
+        assert application.available_date == date(2026, 11, 5)
+
+
+def test_volunteer_application_rejects_untrusted_origin(auth_db):
+    session_factory, settings = auth_db
+    with session_factory() as db, pytest.raises(HTTPException) as error:
+        submit_volunteer_application(
+            VolunteerApplicationRequest(
+                name="Test Volunteer",
+                age=25,
+                address="12 Garden Road",
+                role_on_trust="Meal service",
+                available_date=date(2026, 11, 5),
+            ),
+            make_request(origin="https://attacker.example"),
+            db,
+            settings,
+        )
+
+    assert error.value.status_code == 403
+    with session_factory() as db:
+        assert db.scalar(select(VolunteerApplication)) is None
+
+
+def test_volunteer_application_rejects_invalid_age():
+    with pytest.raises(ValidationError):
+        VolunteerApplicationRequest(
+            name="Test Volunteer",
+            age=0,
+            address="12 Garden Road",
+            role_on_trust="Meal service",
+            available_date=date(2026, 11, 5),
+        )
+
+
+def test_membership_application_is_saved_and_returns_generated_id(auth_db):
+    session_factory, settings = auth_db
+    with session_factory() as db:
+        payload = MembershipApplicationRequest(
+            full_name="  Test   Member ",
+            father_spouse_name="Parent Name",
+            date_of_birth=date(1990, 5, 12),
+            gender="Other",
+            occupation="Teacher",
+            mobile="+91 98765-43210",
+            email="",
+            residential_address="12 Garden Road",
+            city_town="Bahour",
+            district="Puducherry",
+            state="Puducherry",
+            pin_code="607402",
+            interests=["Food & Meal Services", "Other Charitable Activities"],
+            other_charitable_activity="Community kitchen",
+        )
+
+        result = submit_membership_application(
+            payload,
+            make_request(origin="http://localhost:5173"),
+            db,
+            settings,
+        )
+
+        application = db.scalar(select(MembershipApplication))
+        assert application is not None
+        assert result.membership_id.startswith(f"APT-{date.today().year}-")
+        assert result.membership_id == application.membership_id
+        assert result.full_name == "Test Member"
+        assert result.date_received == application.created_at.date()
+        assert result.interests == ["Food & Meal Services", "Other Charitable Activities"]
+        assert result.approval_status == "APPROVED"
+        assert application.email is None
+        assert application.other_charitable_activity == "Community kitchen"
+        assert application.approval_status == "APPROVED"
+
+
+def test_membership_application_rejects_untrusted_origin(auth_db):
+    session_factory, settings = auth_db
+    payload = MembershipApplicationRequest(
+        full_name="Test Member",
+        date_of_birth=date(1990, 5, 12),
+        gender="Female",
+        mobile="9876543210",
+        residential_address="12 Garden Road",
+        city_town="Bahour",
+        district="Puducherry",
+        state="Puducherry",
+        pin_code="607402",
+        interests=["Medical Camps"],
+    )
+    with session_factory() as db, pytest.raises(HTTPException) as error:
+        submit_membership_application(
+            payload,
+            make_request(origin="https://attacker.example"),
+            db,
+            settings,
+        )
+
+    assert error.value.status_code == 403
+    with session_factory() as db:
+        assert db.scalar(select(MembershipApplication)) is None
+
+
+def test_membership_application_validates_required_interest_and_other_activity():
+    base = {
+        "full_name": "Test Member",
+        "date_of_birth": date(1990, 5, 12),
+        "gender": "Male",
+        "mobile": "9876543210",
+        "residential_address": "12 Garden Road",
+        "city_town": "Bahour",
+        "district": "Puducherry",
+        "state": "Puducherry",
+        "pin_code": "607402",
+    }
+    with pytest.raises(ValidationError):
+        MembershipApplicationRequest(**base, interests=[])
+    with pytest.raises(ValidationError):
+        MembershipApplicationRequest(**base, interests=["Other Charitable Activities"])
+    with pytest.raises(ValidationError):
+        MembershipApplicationRequest(**{**base, "full_name": "   "}, interests=["Medical Camps"])
 
 
 def test_live_donations_require_explicit_gate_and_https():

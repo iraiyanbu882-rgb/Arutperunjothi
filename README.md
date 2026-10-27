@@ -52,6 +52,10 @@ A responsive, bilingual (English/Tamil) charity website built with React and Vit
 
 Email/password accounts are stored in SQLite. Passwords use scrypt hashes; the browser receives only a random, HttpOnly session cookie. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `backend/.env` to enable the Google button. Without those values, Google sign-in remains visibly disabled while email/password sign-in and sign-up continue to work. New account and sign-in data is not connected to Cashfree donations yet.
 
+## Membership applications
+
+The Volunteer navigation link opens the bilingual membership application at `/volunteer`. The form collects applicant, contact, and service-interest details. The FastAPI `POST /api/membership-applications` endpoint validates the submission, saves it in the SQLite `membership_applications` table, and returns a generated Membership ID and receipt date after the save succeeds. As configured at the trust's request, a saved application is automatically marked approved. No public application-list endpoint is provided. Production static hosting must serve the frontend app for `/volunteer` as well as `/`; serve the frontend and API over HTTPS and publish a trust-approved privacy and retention policy before collecting real applicant information.
+
 To configure Google OAuth:
 
 1. Create an OAuth 2.0 **Web application** client in Google Cloud Console.

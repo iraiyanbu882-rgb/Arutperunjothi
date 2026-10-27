@@ -28,15 +28,27 @@ from app.auth import (
 from app.cashfree import CashfreeError
 from app.config import Settings, get_settings
 from app.database import Base, SessionLocal, engine
-from app.models import AuthSession, Donation, OAuthState, User, WebhookReceipt, utc_now
+from app.models import (
+    AuthSession,
+    Donation,
+    MembershipApplication,
+    OAuthState,
+    User,
+    VolunteerApplication,
+    WebhookReceipt,
+    utc_now,
+)
 from app.schemas import (
     DonationOrderRequest,
     DonationOrderResponse,
     DonationStatusResponse,
+    MembershipApplicationRequest,
+    MembershipApplicationResponse,
     PublicConfigResponse,
     SignInRequest,
     SignUpRequest,
     UserResponse,
+    VolunteerApplicationRequest,
 )
 
 AUTH_COOKIE = "arut_session"
@@ -78,6 +90,71 @@ def require_trusted_origin(request: Request, settings: Settings) -> None:
 def require_donations_enabled(settings: Settings) -> None:
     if not settings.can_accept_donations:
         raise HTTPException(status_code=503, detail="Donations are not enabled.")
+
+
+@app.post("/api/volunteers", status_code=201)
+def submit_volunteer_application(
+    payload: VolunteerApplicationRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    require_trusted_origin(request, settings)
+    application = VolunteerApplication(
+        id=str(uuid.uuid4()),
+        name=payload.name,
+        age=payload.age,
+        address=payload.address,
+        role_on_trust=payload.role_on_trust,
+        available_date=payload.available_date,
+    )
+    db.add(application)
+    db.commit()
+    return {"message": "Volunteer application submitted."}
+
+
+@app.post(
+    "/api/membership-applications",
+    response_model=MembershipApplicationResponse,
+    status_code=201,
+)
+def submit_membership_application(
+    payload: MembershipApplicationRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+):
+    require_trusted_origin(request, settings)
+    received_at = utc_now()
+    application = MembershipApplication(
+        id=str(uuid.uuid4()),
+        membership_id=f"APT-{received_at.year}-{uuid.uuid4().hex[:12].upper()}",
+        full_name=payload.full_name,
+        father_spouse_name=payload.father_spouse_name,
+        date_of_birth=payload.date_of_birth,
+        gender=payload.gender,
+        occupation=payload.occupation,
+        mobile=payload.mobile,
+        email=payload.email,
+        residential_address=payload.residential_address,
+        city_town=payload.city_town,
+        district=payload.district,
+        state=payload.state,
+        pin_code=payload.pin_code,
+        interests=payload.interests,
+        other_charitable_activity=payload.other_charitable_activity,
+        approval_status="APPROVED",
+        created_at=received_at,
+    )
+    db.add(application)
+    db.commit()
+    return MembershipApplicationResponse(
+        membership_id=application.membership_id,
+        date_received=received_at.date(),
+        full_name=application.full_name,
+        interests=application.interests,
+        approval_status="APPROVED",
+    )
 
 
 def set_auth_cookie(response: Response, token: str, settings: Settings) -> None:

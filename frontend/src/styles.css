@@ -98,6 +98,18 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .hero-pattern::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
 .hero-pattern::after { right: -1px; bottom: -1px; border-right: 2px solid; border-bottom: 2px solid; }
 .hero-copy { max-width: 640px; }
+.registration-badge {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 22px;
+  border-left: 3px solid var(--gold);
+  padding: 9px 13px;
+  background: rgba(255, 253, 227, .76);
+  color: var(--brown);
+  font-size: .83rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
 .eyebrow, .section-kicker {
   display: flex;
   align-items: center;
@@ -182,21 +194,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .gallery { background: var(--paper); }
 .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .gallery-tile { min-width: 0; margin: 0; }
-.gallery-art { position: relative; overflow: hidden; height: 245px; background: #e8d8b8; }
-.gallery-2 .gallery-art { background: #d9d8be; }
-.gallery-3 .gallery-art { background: #e7cfa8; }
-.gallery-sun { position: absolute; top: 27px; right: 40px; width: 55px; aspect-ratio: 1; border-radius: 50%; background: rgba(255, 247, 211, .82); }
-.gallery-hill { position: absolute; right: -25px; bottom: -65px; left: -25px; height: 150px; border-radius: 50% 50% 0 0; background: #aa8350; transform: rotate(-5deg); }
-.gallery-2 .gallery-hill { background: #85865e; transform: rotate(5deg); }
-.gallery-3 .gallery-hill { background: #a76f4b; }
-.hill-two { bottom: -100px; left: 30%; background: #846344; transform: rotate(5deg); }
-.gallery-2 .hill-two { background: #6d7451; transform: rotate(-4deg); }
-.gallery-3 .hill-two { background: #79533c; }
-.gallery-person { position: absolute; z-index: 2; bottom: 57px; left: 42%; width: 16px; height: 58px; border-radius: 10px 10px 3px 3px; background: #4f3928; transform: rotate(4deg); }
-.gallery-person::before { position: absolute; top: -18px; left: 1px; width: 15px; height: 15px; border-radius: 50%; background: #4f3928; content: ""; }
-.person-two { left: 56%; bottom: 53px; height: 49px; background: #68503a; transform: rotate(-7deg); }
-.person-two::before { background: #68503a; }
-.gallery-bowl { position: absolute; z-index: 3; bottom: 45px; left: 49%; width: 28px; height: 12px; border-radius: 3px 3px 50% 50%; background: #dfbf78; }
+.gallery-photo { display: block; width: 100%; height: 245px; object-fit: cover; object-position: center 45%; background: #e8d8b8; }
 .gallery-tile figcaption { display: flex; align-items: center; gap: 12px; padding-top: 17px; color: var(--brown); font: 1.08rem Georgia, "Noto Serif Tamil", serif; }
 .gallery-tile figcaption span { color: var(--gold); font: .74rem "DM Sans", sans-serif; }
 .gallery-disclaimer { margin: 25px 0 0; color: #897e6e; font-size: .75rem; text-align: center; }
@@ -228,6 +226,54 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .form-status { min-height: 34px; margin: 15px 0 0; color: #786d5f; font-size: .77rem; line-height: 1.6; }
 .payment-result { display: grid; gap: 5px; margin-top: 12px; padding: 13px; border: 1px solid var(--line); color: var(--brown-soft); font-size: .84rem; }
 .payment-result.confirmed { border-color: #638044; background: #f2f6eb; color: #3d602b; }
+
+.volunteer-page { display: flex; min-height: 100vh; flex-direction: column; }
+.volunteer-header { display: flex; min-height: 82px; align-items: center; justify-content: space-between; gap: 20px; padding: 14px max(5vw, calc((100vw - 1060px) / 2)); border-bottom: 1px solid var(--line); background: rgba(248, 245, 236, .96); }
+.volunteer-header-actions { display: flex; align-items: center; gap: 18px; }
+.volunteer-home-link { color: var(--brown-soft); font-size: .88rem; }
+.volunteer-main { width: min(100% - 40px, 680px); flex: 1; margin: 0 auto; padding: 64px 0 80px; }
+.volunteer-intro { margin-bottom: 28px; }
+.volunteer-intro h1 { margin: 18px 0 12px; color: var(--brown); font: 500 clamp(2.2rem, 6vw, 3.4rem)/1.12 Georgia, "Noto Serif Tamil", serif; letter-spacing: -.04em; }
+.volunteer-intro > p:last-child { max-width: 580px; margin: 0; color: var(--muted); line-height: 1.75; }
+.volunteer-form { display: grid; gap: 5px; padding: clamp(20px, 5vw, 34px); border: 1px solid var(--line); background: var(--paper); box-shadow: 0 18px 50px rgba(64,45,26,.05); }
+.volunteer-form textarea { width: 100%; min-height: 95px; resize: vertical; padding: 10px 12px; border: 1px solid var(--line); border-radius: 0; background: #fffefa; color: var(--brown); font: inherit; }
+.volunteer-form .payment-button { margin-top: 15px; }
+.volunteer-form .payment-button:disabled { cursor: wait; opacity: .7; }
+.volunteer-privacy, .volunteer-status { margin: 8px 0 0; color: var(--muted); font-size: .78rem; line-height: 1.6; }
+.volunteer-status.success { padding: 12px; border: 1px solid #a4b88b; background: #f2f6eb; color: #3d602b; }
+.volunteer-status.error { padding: 12px; border: 1px solid #d5a39b; background: #fff4f1; color: #8d342b; }
+.volunteer-footer { margin-top: auto; }
+.membership-form { gap: 0; }
+.membership-section { padding: 0 0 24px; border-bottom: 1px solid var(--line); }
+.membership-section + .membership-section { padding-top: 23px; }
+.membership-section h2 { margin: 0; color: var(--brown); font: 500 1.3rem Georgia, "Noto Serif Tamil", serif; }
+.membership-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 18px; }
+.membership-grid .field-label { min-width: 0; }
+.membership-grid .field-label > span, .membership-gender legend > span, .other-activity-field > span { color: #a33b2f; }
+.membership-form .field-label input, .membership-form .field-label textarea { width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 0; background: #fffefa; color: var(--brown); font: inherit; }
+.membership-form .field-label textarea { min-height: 95px; resize: vertical; }
+.membership-wide { grid-column: 1 / -1; }
+.membership-gender { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 12px; margin: 14px 0 0; padding: 0; border: 0; color: #655543; font-size: .8rem; }
+.membership-gender legend { margin-bottom: 8px; font-weight: 600; }
+.membership-choice { display: inline-flex; align-items: center; gap: 6px; }
+.membership-choice input, .membership-interest input { accent-color: var(--gold); }
+.membership-helper { margin: 7px 0 12px; color: var(--muted); font-size: .8rem; }
+.membership-interests { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.membership-interest { display: flex; min-height: 42px; align-items: flex-start; gap: 9px; padding: 10px; border: 1px solid var(--line); background: #fffefa; color: var(--brown-soft); font-size: .79rem; line-height: 1.45; cursor: pointer; }
+.membership-interest input { flex: 0 0 auto; margin: 2px 0 0; }
+.other-activity-field { margin-top: 14px; }
+.membership-success { padding: clamp(22px, 5vw, 38px); border: 1px solid var(--line); background: var(--paper); box-shadow: 0 18px 50px rgba(64,45,26,.05); }
+.membership-success h2 { margin: 17px 0 10px; color: var(--brown); font: 500 clamp(1.7rem, 5vw, 2.4rem)/1.2 Georgia, "Noto Serif Tamil", serif; }
+.membership-success > p:not(.eyebrow) { color: var(--brown-soft); }
+.membership-id-card { max-width: 490px; margin: 25px auto 0; padding: 25px; border: 1px solid var(--gold); background: #fffdf7; color: var(--brown-soft); box-shadow: 0 10px 30px rgba(64,45,26,.08); }
+.membership-id-card p { margin: 9px 0; line-height: 1.55; overflow-wrap: anywhere; }
+.membership-id-card hr { margin: 18px 0; border: 0; border-top: 1px solid var(--line); }
+.membership-card-title { margin: 0 !important; color: var(--brown); font: 600 1rem Georgia, serif; letter-spacing: .06em; }
+.membership-card-subtitle { margin-top: 5px !important; color: var(--gold); font-size: .85rem; }
+.membership-id-card h3 { margin: 18px 0; color: var(--brown); font: 500 1.15rem Georgia, "Noto Serif Tamil", serif; }
+.membership-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 22px; }
+.membership-actions button, .membership-actions a { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border: 1px solid var(--gold); padding: 9px 16px; background: transparent; color: var(--brown); cursor: pointer; font: inherit; }
+.membership-actions a { background: var(--brown); color: var(--paper); }
 
 .policies { background: var(--cream); }
 .policy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -302,7 +348,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .contact-placeholder { grid-column: 2; max-width: none; }
   .gallery-grid { grid-template-columns: 1fr 1fr; }
   .gallery-tile:last-child { grid-column: span 2; }
-  .gallery-3 .gallery-art { height: 220px; }
+  .gallery-photo { height: 220px; }
   .site-footer { justify-content: center; text-align: center; }
   .site-footer > * { flex-basis: 100%; }
   .footer-brand { justify-content: center; }
@@ -323,6 +369,15 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .brand strong { font-size: .88rem; }
   .brand small { font-size: .68rem; }
   .brand-seal { width: 39px; height: 39px; }
+  .volunteer-header { align-items: flex-start; padding: 12px 20px; }
+  .volunteer-header-actions { align-items: flex-end; flex-direction: column-reverse; gap: 7px; }
+  .volunteer-header .language-choice { min-height: 34px; padding: 6px 8px; font-size: .72rem; }
+  .volunteer-home-link { font-size: .78rem; }
+  .volunteer-main { padding-top: 45px; }
+  .membership-grid, .membership-interests { grid-template-columns: 1fr; }
+  .membership-wide { grid-column: auto; }
+  .membership-gender { gap: 9px; }
+  .membership-id-card { padding: 20px; }
   .hero { padding-top: 55px; }
   .hero-intro { font-size: .96rem; }
   .hero-actions { flex-wrap: wrap; gap: 17px; }
@@ -334,13 +389,20 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .stat:last-child { border-bottom: 0; }
   .gallery-grid { grid-template-columns: 1fr; }
   .gallery-tile:last-child { grid-column: auto; }
-  .gallery-art, .gallery-3 .gallery-art { height: 230px; }
+  .gallery-photo { height: 230px; }
   .contact { grid-template-columns: 1fr; }
   .contact-mark { font-size: 2.5rem; }
   .contact-placeholder { grid-column: auto; }
   .donation-form { padding: 20px 15px; }
   .amount-options { grid-template-columns: repeat(3, 1fr); }
   .auth-dialog { padding: 31px 22px 25px; }
+}
+@media print {
+  body { background: white; }
+  .volunteer-header, .volunteer-intro, .volunteer-footer, .membership-actions { display: none !important; }
+  .volunteer-main { width: 100%; padding: 0; }
+  .membership-success { border: 0; box-shadow: none; }
+  .membership-id-card { box-shadow: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
