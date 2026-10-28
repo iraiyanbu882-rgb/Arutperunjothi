@@ -25,7 +25,7 @@ a { color: inherit; text-decoration: none; }
 button, a, input { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid #8b642a; outline-offset: 3px; }
 
-.site-shell { overflow: hidden; }
+.site-shell { overflow-x: clip; }
 .site-header {
   position: sticky;
   top: 0;
@@ -33,14 +33,18 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   display: flex;
   min-height: 82px;
   align-items: center;
-  justify-content: space-between;
-  gap: 22px;
-  padding: 14px max(5vw, calc((100vw - 1240px) / 2));
+  justify-content: flex-start;
+  gap: 18px;
+  padding: 14px max(4vw, calc((100vw - 1240px) / 2));
   background: rgba(248, 245, 236, .96);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(16px);
 }
-.brand { display: flex; align-items: center; gap: 12px; color: var(--brown); }
+.brand { display: flex; flex-shrink: 0; align-items: center; gap: 12px; color: var(--brown); }
+.header-right { display: grid; flex: 1; justify-items: end; gap: 6px; }
+.header-utilities { display: flex; height: 40px; flex-wrap: nowrap; align-items: center; align-self: center; justify-content: flex-end; gap: 8px; line-height: 40px; vertical-align: middle; }
+.nav-volunteer { position: relative; top: 1px; display: inline-flex; height: 38px; align-items: center; align-self: center; justify-content: center; box-sizing: border-box; border: 1px solid var(--gold); margin: 0; padding: 0 10px; background: transparent; color: var(--brown); font-size: .82rem; font-weight: 600; line-height: normal; vertical-align: middle; white-space: nowrap; }
+.nav-volunteer:hover { background: var(--brown); color: var(--paper); }
 .brand > span:last-child { display: grid; gap: 3px; }
 .brand strong { font-family: Georgia, "Noto Serif Tamil", serif; font-size: 1.02rem; letter-spacing: -.02em; }
 .brand small { font-size: .76rem; color: var(--brown-soft); }
@@ -55,15 +59,16 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   font-family: Georgia, "Noto Serif Tamil", serif;
   font-size: 1.18rem;
 }
-.main-nav { display: flex; align-items: center; gap: clamp(16px, 2.3vw, 34px); }
-.main-nav > a:not(.nav-donate) { font-size: .88rem; color: #564838; }
+ .main-nav { display: flex; align-items: center; gap: clamp(10px, 1.25vw, 20px); margin-left: auto; white-space: nowrap; }
+.main-nav > a:not(.nav-donate) { font-size: .84rem; color: #564838; white-space: nowrap; }
 .main-nav > a:hover, .footer-policy:hover { color: var(--gold); }
 .nav-donate { border-radius: 3px; padding: 11px 18px; color: var(--paper); background: var(--brown); font-size: .88rem; }
-.language-switcher { display: inline-flex; align-items: center; border: 1px solid var(--line); }
-.language-choice { min-height: 38px; padding: 7px 11px; border: 0; background: transparent; color: var(--brown-soft); cursor: pointer; font-size: .82rem; }
+.language-switcher { display: inline-flex !important; height: 38px; flex: 0 0 auto; flex-shrink: 0; align-items: center; align-self: center; box-sizing: border-box; border: 1px solid var(--line); vertical-align: middle; }
+
+.language-choice { height: 36px; box-sizing: border-box; align-self: center; padding: 0 11px; border: 0; background: transparent; color: var(--brown-soft); cursor: pointer; font-size: .82rem; line-height: normal; white-space: nowrap; }
 .language-choice.active { background: var(--brown); color: var(--paper); }
-.nav-auth-button { min-height: 38px; padding: 8px 13px; border: 1px solid var(--gold); background: transparent; color: var(--brown); cursor: pointer; font-size: .84rem; }
-.nav-auth-group { display: flex; align-items: center; gap: 7px; }
+.nav-auth-button { height: 38px; box-sizing: border-box; align-self: center; padding: 0 10px; border: 1px solid var(--gold); background: transparent; color: var(--brown); cursor: pointer; font-size: .82rem; line-height: normal; white-space: nowrap; }
+.nav-auth-group { display: flex; height: 38px; align-items: center; align-self: center; gap: 5px; white-space: nowrap; }
 .nav-auth-secondary { background: var(--brown); color: var(--paper); }
 .nav-account { display: flex; align-items: center; gap: 8px; }
 .account-name { max-width: 125px; overflow: hidden; color: var(--brown-soft); font-size: .81rem; text-overflow: ellipsis; white-space: nowrap; }
@@ -167,11 +172,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .section-heading > p { margin: 15px auto 0; color: var(--muted); line-height: 1.75; }
 .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .service-card { position: relative; min-height: 260px; padding: 29px 27px; border: 1px solid var(--line); background: rgba(255, 253, 247, .64); }
-.service-icon { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; background: #efe3c6; color: var(--gold); font-size: 1.45rem; }
-.icon-2 { background: #eee5dc; color: #7d6045; }
-.icon-3 { background: #e9e5d2; color: #817337; }
-.service-number { position: absolute; top: 36px; right: 28px; color: #b4a58c; font: .9rem Georgia, serif; }
-.service-card h3, .policy-grid h3 { margin: 26px 0 10px; color: var(--brown); font: 500 1.35rem Georgia, "Noto Serif Tamil", serif; }
+.service-card h3, .policy-grid h3 { margin: 0 0 10px; color: var(--brown); font: 500 1.35rem Georgia, "Noto Serif Tamil", serif; }
 .service-card p, .policy-grid p { margin: 0; color: var(--muted); font-size: .91rem; line-height: 1.75; }
 
 .impact { position: relative; overflow: hidden; background: var(--brown); color: var(--paper); }
@@ -199,8 +200,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .gallery-tile figcaption span { color: var(--gold); font: .74rem "DM Sans", sans-serif; }
 .gallery-disclaimer { margin: 25px 0 0; color: #897e6e; font-size: .75rem; text-align: center; }
 
-.contact { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 32px; background: var(--cream-deep); }
-.contact-mark { color: var(--gold); font-size: 3.3rem; }
+.contact { display: grid; grid-template-columns: 1fr; align-items: center; background: var(--cream-deep); }
 .contact h2 { margin-top: 14px; font-size: clamp(1.9rem, 3.2vw, 2.8rem); }
 .contact p { max-width: 660px; margin: 13px 0 0; color: var(--muted); font-size: .91rem; line-height: 1.8; }
 .contact-placeholder { max-width: 240px; padding: 14px 17px; border: 1px solid rgba(57,41,29,.25); color: var(--brown-soft); font-size: .84rem; line-height: 1.5; }
@@ -313,15 +313,22 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
 @keyframes scroll { 0%, 100% { transform: translateY(0); opacity: 1; } 70% { transform: translateY(7px); opacity: .2; } }
+@media (max-width: 1450px) {
+  .main-nav { gap: 7px; }
+  .main-nav > a:not(.nav-donate) { font-size: .78rem; }
+  .nav-donate, .nav-auth-button, .language-choice { padding-right: 8px; padding-left: 8px; }
+}
 @media (max-width: 940px) {
   .site-header { padding-right: 4vw; padding-left: 4vw; }
-  .main-nav { gap: 15px; }
+  .main-nav { gap: 10px; transform: translateX(-6px); }
   .main-nav > a:not(.nav-donate) { font-size: .81rem; }
   .hero, .section-wrap { padding-right: 6vw; padding-left: 6vw; }
   .hero { min-height: 570px; }
 }
 @media (max-width: 740px) {
-  .site-header { min-height: 72px; }
+  .site-header { min-height: 72px; flex-wrap: wrap; }
+  .header-utilities { flex: 1; align-items: center; flex-wrap: nowrap; justify-content: flex-end; gap: 6px; margin-left: auto; }
+  .main-nav { margin-left: 0; transform: none; }
   .menu-toggle { display: grid; width: 44px; height: 44px; place-content: center; gap: 5px; border: 1px solid var(--line); background: transparent; }
   .menu-toggle span { width: 18px; height: 1px; background: var(--brown); }
   .main-nav { position: absolute; top: calc(100% - 1px); right: 0; left: 0; display: none; align-items: stretch; gap: 0; padding: 10px 5vw 18px; border-bottom: 1px solid var(--line); background: var(--cream); }
@@ -332,7 +339,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .main-nav .nav-auth-group .nav-auth-button { flex: 1; }
   .main-nav > .nav-auth-button { justify-self: start; margin-top: 12px; }
   .main-nav .nav-account { justify-content: space-between; margin-top: 12px; }
-  .language-switcher { justify-self: start; margin-top: 12px; }
+  .header-utilities .nav-auth-group { margin-top: 0; }
+  .header-utilities .language-switcher { justify-self: start; margin-top: 0; }
   .hero { min-height: auto; grid-template-columns: 1fr; gap: 20px; padding-top: 68px; padding-bottom: 70px; }
   .hero h1 { max-width: 590px; font-size: clamp(2.55rem, 10vw, 4.25rem); }
   .hero-art { min-height: 330px; }
@@ -353,8 +361,10 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .site-footer > * { flex-basis: 100%; }
   .footer-brand { justify-content: center; }
 }
-@media (min-width: 741px) and (max-width: 1080px) {
+@media (min-width: 741px) and (max-width: 1450px) {
   .site-header { min-height: 72px; }
+  .header-utilities { align-items: center; flex-wrap: nowrap; justify-content: flex-end; gap: 6px; margin-left: auto; }
+  .main-nav { margin-left: 0; transform: none; }
   .menu-toggle { display: grid; width: 44px; height: 44px; place-content: center; gap: 5px; border: 1px solid var(--line); background: transparent; }
   .menu-toggle span { width: 18px; height: 1px; background: var(--brown); }
   .main-nav { position: absolute; top: calc(100% - 1px); right: 0; left: 0; display: none; align-items: stretch; gap: 0; padding: 10px 5vw 18px; border-bottom: 1px solid var(--line); background: var(--cream); }
@@ -363,7 +373,12 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .main-nav .nav-donate { margin-top: 12px; text-align: center; }
   .nav-auth-group { margin-top: 12px; }
   .nav-account { justify-content: space-between; margin-top: 12px; }
-  .language-switcher { justify-self: start; margin-top: 12px; }
+  .header-utilities .nav-auth-group { margin-top: 0; }
+  .header-utilities .language-switcher { justify-self: start; margin-top: 0; }
+}
+@media (max-width: 1450px) {
+  .header-utilities { margin-left: auto; }
+  .header-utilities .nav-volunteer { top: 1px; padding: 0 2px; }
 }
 @media (max-width: 460px) {
   .brand strong { font-size: .88rem; }
@@ -391,12 +406,38 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
   .gallery-tile:last-child { grid-column: auto; }
   .gallery-photo { height: 230px; }
   .contact { grid-template-columns: 1fr; }
-  .contact-mark { font-size: 2.5rem; }
   .contact-placeholder { grid-column: auto; }
   .donation-form { padding: 20px 15px; }
   .amount-options { grid-template-columns: repeat(3, 1fr); }
   .auth-dialog { padding: 31px 22px 25px; }
 }
+.payment-page-shell { min-height: 100vh; background: var(--cream); }
+.payment-header { display: flex; min-height: 82px; align-items: center; justify-content: space-between; gap: 20px; padding: 14px max(5vw, calc((100vw - 1120px) / 2)); border-bottom: 1px solid var(--line); background: var(--paper); }
+.payment-logo { width: 54px; height: 54px; object-fit: contain; }
+.back-home { border-bottom: 1px solid var(--gold); color: var(--brown); font-size: .88rem; font-weight: 600; }
+.payment-main { width: min(920px, 90vw); margin: 0 auto; padding: 70px 0; }
+.payment-intro { max-width: 720px; margin-bottom: 32px; }
+.payment-intro .kicker { color: var(--gold); font-size: .76rem; font-weight: 700; letter-spacing: .16em; }
+.payment-intro h1 { margin: 12px 0 16px; color: var(--brown); font: 500 clamp(2rem, 4vw, 3.4rem)/1.12 Georgia, serif; }
+.payment-intro > p:last-child { color: var(--muted); line-height: 1.75; }
+.bank-details-card, .bank-transfer-card { margin-top: 20px; border: 1px solid var(--line); padding: 28px; background: var(--paper); }
+.bank-details-card h2, .bank-transfer-card h2 { margin: 0 0 20px; color: var(--brown); font: 500 1.45rem Georgia, serif; }
+.bank-details-card dl { margin: 0; }
+.bank-details-card dl div { display: grid; grid-template-columns: minmax(150px, 1fr) 2fr; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.bank-details-card dl div:last-child { border-bottom: 0; }
+.bank-details-card dt { color: var(--muted); }
+.bank-details-card dd { margin: 0; color: var(--brown); font-weight: 700; letter-spacing: .02em; }
+.bank-transfer-card p { margin: 0; color: var(--muted); line-height: 1.75; }
+.payment-footer { display: flex; justify-content: space-between; gap: 20px; padding: 24px max(5vw, calc((100vw - 1120px) / 2)); border-top: 1px solid var(--line); color: var(--muted); font-size: .82rem; }
+@media (max-width: 600px) {
+  .payment-header { align-items: center; padding-right: 20px; padding-left: 20px; }
+  .payment-logo { width: 46px; height: 46px; }
+  .payment-main { width: auto; padding: 45px 20px; }
+  .bank-details-card, .bank-transfer-card { padding: 20px; }
+  .bank-details-card dl div { grid-template-columns: 1fr; gap: 5px; }
+  .payment-footer { flex-direction: column; text-align: center; }
+}
+
 @media print {
   body { background: white; }
   .volunteer-header, .volunteer-intro, .volunteer-footer, .membership-actions { display: none !important; }

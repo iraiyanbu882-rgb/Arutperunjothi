@@ -406,12 +406,12 @@ function VolunteerPage() {
             <button className={language === "en" ? "language-choice active" : "language-choice"} type="button" aria-pressed={language === "en"} onClick={() => setLanguage("en")}>English</button>
             <button className={language === "ta" ? "language-choice active" : "language-choice"} type="button" aria-pressed={language === "ta"} lang="ta" onClick={() => setLanguage("ta")}>தமிழ்</button>
           </div>
-          <a className="volunteer-home-link" href={`/?lang=${language}#home`}>← {text.volunteerHome}</a>
+          <a className="volunteer-home-link" href={`/?lang=${language}#home`}>{text.volunteerHome}</a>
         </div>
       </header>
       <main className="volunteer-main">
         <section className="volunteer-intro">
-          <p className="eyebrow"><span className="eyebrow-mark">✺</span>{text.volunteerNav}</p>
+          <p className="eyebrow">{text.volunteerNav}</p>
           <h1>{text.membershipTitle}</h1>
           <p>{text.membershipIntro}</p>
         </section>
@@ -676,7 +676,6 @@ function HomePage() {
     ["#impact", text.nav[2]],
     ["#gallery", text.nav[3]],
     ["#contact", text.nav[4]],
-    [`/volunteer?lang=${language}`, text.volunteerNav],
   ];
 
   function openAuth(mode = "signin") {
@@ -775,6 +774,24 @@ function HomePage() {
             <small lang="ta">அருட்பெருஞ்ஜோதி அறக்கட்டளை</small>
           </span>
         </a>
+        <div className="header-utilities">
+          <a className="nav-volunteer" href={`/volunteer?lang=${language}`}>{text.volunteerNav}</a>
+          {authUser ? (
+            <div className="nav-account">
+              <span className="account-name" title={authUser.email}>{authUser.name}</span>
+              <button className="nav-auth-button" type="button" onClick={signOut}>{text.signOut}</button>
+            </div>
+          ) : (
+            <div className="nav-auth-group">
+              <button className="nav-auth-button" type="button" onClick={() => openAuth("signin")}>{text.signIn}</button>
+              <button className="nav-auth-button nav-auth-secondary" type="button" onClick={() => openAuth("signup")}>{text.signUp}</button>
+            </div>
+          )}
+          <div className="language-switcher" role="group" aria-label={text.languageLabel}>
+            <button className={language === "en" ? "language-choice active" : "language-choice"} type="button" aria-pressed={language === "en"} onClick={() => setLanguage("en")}>English</button>
+            <button className={language === "ta" ? "language-choice active" : "language-choice"} type="button" aria-pressed={language === "ta"} lang="ta" onClick={() => setLanguage("ta")}>தமிழ்</button>
+          </div>
+        </div>
         <button
           className="menu-toggle"
           type="button"
@@ -788,37 +805,7 @@ function HomePage() {
           {navLinks.map(([href, label]) => (
             <a href={href} key={href} onClick={() => setMenuOpen(false)}>{label}</a>
           ))}
-          <a className="nav-donate" href="#donate" onClick={() => setMenuOpen(false)}>{text.donate}</a>
-          {authUser ? (
-            <div className="nav-account">
-              <span className="account-name" title={authUser.email}>{authUser.name}</span>
-              <button className="nav-auth-button" type="button" onClick={signOut}>{text.signOut}</button>
-            </div>
-          ) : (
-            <div className="nav-auth-group">
-              <button className="nav-auth-button" type="button" onClick={() => openAuth("signin")}>{text.signIn}</button>
-              <button className="nav-auth-button nav-auth-secondary" type="button" onClick={() => openAuth("signup")}>{text.signUp}</button>
-            </div>
-          )}
-          <div className="language-switcher" role="group" aria-label={text.languageLabel}>
-            <button
-              className={language === "en" ? "language-choice active" : "language-choice"}
-              type="button"
-              aria-pressed={language === "en"}
-              onClick={() => setLanguage("en")}
-            >
-              English
-            </button>
-            <button
-              className={language === "ta" ? "language-choice active" : "language-choice"}
-              type="button"
-              aria-pressed={language === "ta"}
-              lang="ta"
-              onClick={() => setLanguage("ta")}
-            >
-              தமிழ்
-            </button>
-          </div>
+          <a className="nav-donate" href="/payment" onClick={() => setMenuOpen(false)}>{text.donate}</a>
         </nav>
       </header>
 
@@ -829,7 +816,7 @@ function HomePage() {
         }}>
           <section className="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
             <button className="auth-close" type="button" aria-label="Close sign in" onClick={() => setAuthOpen(false)}>×</button>
-            <div className="section-kicker"><span>✺</span><span>Arutperunjothi Trust</span></div>
+            <div className="section-kicker"><span>Arutperunjothi Trust</span></div>
             <h2 id="auth-title">{authMode === "signup" ? text.createAccount : text.welcomeBack}</h2>
             <button
               className="google-auth-button"
@@ -906,25 +893,24 @@ function HomePage() {
           <div className="hero-pattern" aria-hidden="true"></div>
           <div className="hero-copy">
             <p className="registration-badge">{text.registration}</p>
-            <p className="eyebrow"><span className="eyebrow-mark">✺</span>{text.eyebrow}</p>
+            <p className="eyebrow">{text.eyebrow}</p>
             <h1>{text.title}</h1>
             <p className="hero-intro">{text.intro}</p>
             <div className="hero-actions">
-              <a className="button button-gold" href="#donate">{text.donate}<span aria-hidden="true"> ↗</span></a>
-              <a className="text-link" href="#about">{text.explore}<span aria-hidden="true"> →</span></a>
+              <a className="button button-gold" href="/payment">{text.donate}</a>
+              <a className="text-link" href="#about">{text.explore}</a>
             </div>
-            <p className="verification-note"><span aria-hidden="true">ⓘ</span> {text.note}</p>
+            <p className="verification-note">{text.note}</p>
           </div>
           <div className="hero-art">
             <div className="hero-art-disc"></div>
             <LotusLamp />
             <div className="hero-art-caption"><span>அருட்பெருஞ்ஜோதி</span><small>Light of grace</small></div>
           </div>
-          <a className="scroll-cue" href="#about" aria-label="Scroll to learn about the trust"><span></span></a>
         </section>
 
         <section className="about section-wrap" id="about">
-          <div className="section-kicker"><span>01</span><span>{text.aboutLabel}</span></div>
+          <div className="section-kicker"><span>{text.aboutLabel}</span></div>
           <div className="about-grid">
             <h2>{text.aboutTitle}</h2>
             <div>
@@ -936,17 +922,13 @@ function HomePage() {
 
         <section className="services section-wrap" id="services">
           <div className="section-heading">
-            <div className="section-kicker"><span>02</span><span>{text.servicesLabel}</span></div>
+            <div className="section-kicker"><span>{text.servicesLabel}</span></div>
             <h2>{text.servicesTitle}</h2>
             <p>{text.servicesIntro}</p>
           </div>
           <div className="service-grid">
-            {text.services.map(([title, description], index) => (
+            {text.services.map(([title, description]) => (
               <article className="service-card" key={title}>
-                <div className={`service-icon icon-${index + 1}`} aria-hidden="true">
-                  {index === 0 ? "◉" : index === 1 ? "✧" : "❋"}
-                </div>
-                <span className="service-number">0{index + 1}</span>
                 <h3>{title}</h3>
                 <p>{description}</p>
               </article>
@@ -956,7 +938,7 @@ function HomePage() {
 
         <section className="impact section-wrap" id="impact">
           <div className="impact-heading">
-            <div className="section-kicker light"><span>03</span><span>{text.impactLabel}</span></div>
+            <div className="section-kicker light"><span>{text.impactLabel}</span></div>
             <h2>{text.impactTitle}</h2>
             <p className="impact-caveat">{text.reported}</p>
           </div>
@@ -974,7 +956,7 @@ function HomePage() {
 
         <section className="gallery section-wrap" id="gallery">
           <div className="section-heading gallery-heading">
-            <div className="section-kicker"><span>04</span><span>{text.galleryLabel}</span></div>
+            <div className="section-kicker"><span>{text.galleryLabel}</span></div>
             <h2>{text.galleryTitle}</h2>
             <p>{text.galleryIntro}</p>
           </div>
@@ -996,68 +978,11 @@ function HomePage() {
         </section>
 
         <section className="contact section-wrap" id="contact">
-          <div className="contact-mark" aria-hidden="true">✺</div>
           <div>
-            <div className="section-kicker"><span>05</span><span>{text.contactLabel}</span></div>
+            <div className="section-kicker"><span>{text.contactLabel}</span></div>
             <h2>{text.contactTitle}</h2>
             <p>{text.contactIntro}</p>
           </div>
-        </section>
-
-        <section className="donation section-wrap" id="donate">
-          <div className="donation-copy">
-            <div className="section-kicker"><span>06</span><span>{text.donationLabel}</span></div>
-            <h2>{text.donationTitle}</h2>
-            <p>{text.donationIntro}</p>
-            <div className="payment-methods">
-              <span>UPI</span><span>Debit / credit cards</span><span>Net banking</span>
-            </div>
-          </div>
-          <form className="donation-form" onSubmit={submitDonation}>
-            <fieldset disabled={!config.donations_enabled || loading}>
-              <legend>{text.amount}</legend>
-              <div className="amount-options">
-                {["100", "250", "500", "1000"].map((value) => (
-                  <label className={amount === value ? "amount-option selected" : "amount-option"} key={value}>
-                    <input type="radio" name="amount" value={value} checked={amount === value} onChange={() => setAmount(value)} />
-                    <span>₹{Number(value).toLocaleString("en-IN")}</span>
-                  </label>
-                ))}
-                <label className={amount === "custom" ? "amount-option selected" : "amount-option"}>
-                  <input type="radio" name="amount" value="custom" checked={amount === "custom"} onChange={() => setAmount("custom")} />
-                  <span>{language === "ta" ? "மற்றவை" : "Other"}</span>
-                </label>
-              </div>
-              {amount === "custom" && (
-                <label className="field-label">
-                  {text.custom}
-                  <input required type="number" min="100" max="1000000" step="1" value={customAmount} onChange={(event) => setCustomAmount(event.target.value)} />
-                </label>
-              )}
-              <label className="field-label">{text.name}
-                <input required autoComplete="name" maxLength="100" value={donor.name} onChange={(event) => setDonor({ ...donor, name: event.target.value })} />
-              </label>
-              <label className="field-label">{text.email}
-                <input required type="email" autoComplete="email" maxLength="254" value={donor.email} onChange={(event) => setDonor({ ...donor, email: event.target.value })} />
-              </label>
-              <label className="field-label">{text.phone}
-                <input required type="tel" autoComplete="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" placeholder="9876543210" value={donor.phone} onChange={(event) => setDonor({ ...donor, phone: event.target.value })} />
-              </label>
-              <button className="button button-brown payment-button" type="submit">
-                {loading ? (language === "ta" ? "தயவுசெய்து காத்திருக்கவும்…" : "Please wait…") : text.donateSubmit}
-                {!loading && <span aria-hidden="true"> →</span>}
-              </button>
-            </fieldset>
-            <p className="form-status" role="status" aria-live="polite">
-              {paymentMessage || (!config.donations_enabled ? text.paymentOff : text.secureNote)}
-            </p>
-            {orderId && (
-              <div className={`payment-result ${paymentStatus === "PAID" ? "confirmed" : ""}`} role="status" aria-live="polite">
-                <strong>{text.successTitle}</strong>
-                <span>{paymentMessage || text.successPending}</span>
-              </div>
-            )}
-          </form>
         </section>
 
         <section className="policies section-wrap" id="policies">
@@ -1087,10 +1012,59 @@ function HomePage() {
   );
 }
 
+function PaymentPage() {
+  const language = new URLSearchParams(window.location.search).get("lang") === "ta" ? "ta" : "en";
+
+  useEffect(() => {
+    document.title = language === "ta"
+      ? "ஆன்லைன் கட்டணம் | அருட்பெருஞ்ஜோதி அறக்கட்டளை"
+      : "Pay Online | Arutperunjothi Trust";
+  }, [language]);
+
+  const tamil = language === "ta";
+  return (
+    <div className="payment-page-shell">
+      <header className="payment-header">
+        <a className="brand" href={`/?lang=${language}#home`}>
+          <img className="payment-logo" src="/images/logo.png" alt="Arutperunjothi Trust logo" />
+          <span>
+            <strong>Arutperunjothi Trust - Bahour</strong>
+            <small lang="ta">அருட்பெருஞ்ஜோதி அறக்கட்டளை</small>
+          </span>
+        </a>
+        <a className="back-home" href={`/?lang=${language}#home`}>{tamil ? "முகப்பு" : "Home"}</a>
+      </header>
+      <main className="payment-main">
+        <section className="payment-intro">
+          <p className="kicker">{tamil ? "நன்கொடை / கட்டணம்" : "DONATION / PAYMENT"}</p>
+          <h1>{tamil ? "அருட்பெருஞ்ஜோதி அறக்கட்டளைக்கு ஆதரவு அளியுங்கள்" : "Support Arutperunjothi Trust"}</h1>
+          <p>{tamil ? "பதிவு செய்யப்பட்ட பொது தொண்டு அறக்கட்டளை. கீழுள்ள அதிகாரப்பூர்வ வங்கி விவரங்களைப் பயன்படுத்தி நன்கொடை வழங்கலாம்." : "Registered Public Charitable Trust. You can use the official trust bank details below for your contribution."}</p>
+        </section>
+        <section className="bank-details-card">
+          <h2>{tamil ? "வங்கி கணக்கு விவரங்கள்" : "Bank Account Details"}</h2>
+          <dl>
+            <div><dt>{tamil ? "வங்கி பெயர்" : "Bank Name"}</dt><dd>UCO BANK</dd></div>
+            <div><dt>{tamil ? "கணக்கு பெயர்" : "Account Name"}</dt><dd>ARUDPERUNJOTHI TRUST</dd></div>
+            <div><dt>{tamil ? "கணக்கு எண்" : "Account Number"}</dt><dd>031202ERUNJ7288</dd></div>
+            <div><dt>{tamil ? "கிளை" : "Branch"}</dt><dd>BAHOUR</dd></div>
+            <div><dt>{tamil ? "IFSC குறியீடு" : "IFSC Code"}</dt><dd>UCBA000312</dd></div>
+          </dl>
+        </section>
+        <section className="bank-transfer-card">
+          <h2>{tamil ? "வங்கி மாற்றம்" : "Bank Transfer"}</h2>
+          <p>{tamil ? "தற்போதைக்கு, மேலே காட்டப்பட்டுள்ள அறக்கட்டளையின் அதிகாரப்பூர்வ வங்கி கணக்கு விவரங்களைப் பயன்படுத்தி நன்கொடை வழங்கலாம். UPI மற்றும் ஆன்லைன் கட்டண வசதிகள் பின்னர் சேர்க்கப்படும்." : "For now, contributions can be made using the official Trust bank account details shown above. UPI and online payment options will be added later."}</p>
+        </section>
+      </main>
+      <footer className="payment-footer"><p>Love | Grace | Compassion | Service</p><p>© {new Date().getFullYear()} Arutperunjothi Trust - Bahour</p></footer>
+    </div>
+  );
+}
+
 function App() {
-  return window.location.pathname.replace(/\/+$/, "") === "/volunteer"
-    ? <VolunteerPage />
-    : <HomePage />;
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+  if (path === "/volunteer") return <VolunteerPage />;
+  if (path === "/payment") return <PaymentPage />;
+  return <HomePage />;
 }
 
 export default App;
