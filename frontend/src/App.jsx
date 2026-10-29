@@ -243,7 +243,6 @@ const copy = {
     haveAccount: "ஏற்கனவே கணக்கு உள்ளதா?",
     needAccount: "புதியவரா?",
     googleNeedsSetup: "Google உள்நுழைவு இன்னும் அமைக்கப்படவில்லை. பின்தளத்தில் Google OAuth client ID மற்றும் secret சேர்க்கவும்.",
-    googleRedirectHint: "Google Cloud Console-இல் Authorized redirect URIs பகுதியில் இந்த URL-ஐ அப்படியே சேர்க்கவும்:",
     authError: "Google உள்நுழைவை முடிக்க முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
     authSuccess: "Google மூலம் உள்நுழைந்துள்ளீர்கள்.",
     accountCreated: "உங்கள் கணக்கு உருவாக்கப்பட்டது.",
@@ -829,10 +828,6 @@ function HomePage() {
               {text.continueWithGoogle}
             </button>
             {!config.google_sign_in_enabled && <p className="google-setup-note">{text.googleNeedsSetup}</p>}
-            <p className="google-redirect-hint">
-              {text.googleRedirectHint}
-              <code>{config.google_redirect_uri}</code>
-            </p>
             <div className="auth-divider"><span>{text.orEmail}</span></div>
             <form className="auth-form" onSubmit={submitAuth}>
               {authMode === "signup" && (
